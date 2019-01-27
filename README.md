@@ -1,5 +1,5 @@
 # Dependencies
-- python 3.4
+- python 3.5.6
 - Carla 0.8.4
 - numpy
 - pil

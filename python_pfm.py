@@ -13,7 +13,8 @@ def readPFM(file):
     scale = None
     endian = None
 
-    header = file.readline().rstrip()
+    # changes made for Python3
+    header = file.readline().rstrip().decode('utf8')
     if header == 'PF':
         color = True
     elif header == 'Pf':
@@ -21,7 +22,8 @@ def readPFM(file):
     else:
         raise Exception('Not a PFM file.')
 
-    dim_match = re.match(r'^(\d+)\s(\d+)\s$', file.readline())
+    dim_str = file.readline().decode('utf8')
+    dim_match = re.match(r'^(\d+)\s(\d+)\s$', dim_str)
     if dim_match:
         width, height = map(int, dim_match.groups())
     else:
@@ -60,6 +62,7 @@ def writePFM(file, image, scale=1):
     else:
         raise Exception('Image must have H x W x 3, H x W x 1 or H x W dimensions.')
 
+    # changes made for Python3
     file.write(bytes(('PF\n' if color else 'Pf\n'), encoding = "utf8"))
     file.write(bytes(('%d %d\n' % (image.shape[1], image.shape[0])), encoding = "utf8"))
 
