@@ -7,6 +7,7 @@ import logging
 import random
 import time
 import os
+import math
 
 from carla.client import make_carla_client
 from carla.sensor import Camera, Lidar
@@ -23,10 +24,10 @@ def run_carla_client(args):
     camcoor_y = -0.06
     camcoor_z = 1.65
     cambaseline = 0.54
-    resolution_w = 2480
-    resolution_h = 752
-    camfu = 718.856
-    camFOV = 80.373247
+    resolution_w = 1240 * args.scale
+    resolution_h = 376 * args.scale
+    camfu = 718.856 * args.scale
+    camFOV = 2 * math.atan2( resolution_w , 2 * camfu ) * 180 / math.pi
 
     # skip n frames for vehicle to start
     num_frames_skip = 30
@@ -44,9 +45,9 @@ def run_carla_client(args):
             settings.set(
                 SynchronousMode=True,
                 SendNonPlayerAgentsInfo=True,
-                NumberOfVehicles=20,
-                NumberOfPedestrians=40,
-                WeatherId=random.choice([1, 3, 7, 8, 14]),
+                NumberOfVehicles=40,
+                NumberOfPedestrians=0,
+                WeatherId=random.choice([1, 2, 8, 9]),
                 QualityLevel=args.quality_level)
             settings.randomize_seeds()
 
@@ -114,7 +115,7 @@ def run_carla_client(args):
                 # will add some noise to the steer.
 
                 control = measurements.player_measurements.autopilot_control
-                control.steer += random.uniform(-0.1, 0.1)
+                control.steer += random.uniform(-0.02, 0.02)
                 client.send_control(control)
 
 
@@ -168,6 +169,11 @@ def main():
         default='carla_kitti',
         type=str,
         help='output folder dir')
+    argparser.add_argument(
+        '-s', '--scale',
+        default=2,
+        type=float,
+        help='scale of frames')
 
     args = argparser.parse_args()
 
