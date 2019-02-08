@@ -27,9 +27,6 @@ def run_carla_client(args):
     camfu = 718.856 * args.scale
     camFOV = 2 * math.atan2(resolution_w, 2 * camfu) * 180 / math.pi
 
-    # skip n frames for vehicle to start
-    num_frames_skip = 30
-
     # weather settings
     weathers = [1, 2, 8, 9]
     print('weathers = ')
@@ -58,7 +55,7 @@ def run_carla_client(args):
             SynchronousMode=True,
             SendNonPlayerAgentsInfo=True,
             NumberOfVehicles=40,
-            NumberOfPedestrians=0,
+            NumberOfPedestrians=40,
             WeatherId=random.choice(weathers),
             QualityLevel=args.quality_level)
         settings.randomize_seeds()
@@ -92,9 +89,11 @@ def run_carla_client(args):
             print('Starting new episode at %r...' % scene.map_name)
             client.start_episode(startPoint)
 
-            tic = time.time()
+            ticLeft = time.time()
+            ticTimeOut = ticLeft
             # Iterate every frame in the episode.
-            for frame in range(0 - num_frames_skip, args.frames_per_episode):
+            iframe = 0
+            while True:
 
                 # Read the data produced by the server this frame.
                 measurements, sensor_data = client.read_data()
@@ -102,20 +101,27 @@ def run_carla_client(args):
                 # Print some of the measurements.
                 print_measurements(measurements)
 
-                if frame >= 0:
+                if measurements.player_measurements.forward_speed * 3.6 > 15:
                     # Save the images to disk.
                     for name, measurement in sensor_data.items():
-                        filename = args.out_filename_format.format(episode, name, frame)
+                        filename = args.out_filename_format.format(episode, name, iframe)
                         measurement.save_to_disk(filename, lambda depth: camfu * cambaseline / depth, 'pfm')
+                    iframe += 1
+                    ticTimeOut = time.time()
 
                 control = measurements.player_measurements.autopilot_control
                 control.steer += random.uniform(-0.02, 0.02)
                 client.send_control(control)
-                print('time left: %.2f' % ((time.time() - tic) / 3600 * (
-                        (args.frames_per_episode - frame)
-                        + (args.frames_per_episode + num_frames_skip) * (len(startPoints) - episode - 1)))
+                print('time left: %.2f' % ((time.time() - ticLeft) / 3600 * (
+                        (args.frames_per_episode - iframe)
+                        + args.frames_per_episode * (len(startPoints) - episode - 1)))
                       )
-                tic = time.time()
+                # if time out, something might be wrong with the auto pilot control
+                if iframe >= args.frames_per_episode or time.time() - ticTimeOut > 120:
+                    print('Time out! Something might be wrong with the auto pilot control!')
+                    ticTimeOut = time.time()
+                    break
+                ticLeft = time.time()
 
 
 def print_measurements(measurements):
