@@ -22,6 +22,7 @@ def run_carla_client(args):
     camcoor_y = -0.06
     camcoor_z = 1.65
     cambaseline = 0.54
+    camcoor_ys = (camcoor_y, camcoor_y + cambaseline)
     resolution_w = 1240 * args.scale
     resolution_h = 376 * args.scale
     camfu = 718.856 * args.scale
@@ -64,26 +65,23 @@ def run_carla_client(args):
         # We will collect the images produced by these cameras every
         # frame.
 
-        for cameraID in range(2, 4):
-            camcoor_y2 = camcoor_y
+        for cameraID, camcoor_y in zip(range(2, 4), camcoor_ys):
             # The default camera captures RGB images of the scene.
             cameraRGB = Camera('Camera%dRGB' % cameraID, FOV=camFOV)
             # Set image resolution in pixels.
             cameraRGB.set_image_size(resolution_w, resolution_h)
             # Set its position relative to the car in meters.
-            cameraRGB.set_position(camcoor_x, camcoor_y2 if cameraID == 2 else camcoor_y3, camcoor_z)
+            cameraRGB.set_position(camcoor_x, camcoor_y, camcoor_z)
             settings.add_sensor(cameraRGB)
 
             # Let's add another camera producing ground-truth depth.
             cameraDepth = Camera('Camera%dDepth' % cameraID, PostProcessing='Depth', FOV=camFOV)
             cameraDepth.set_image_size(resolution_w, resolution_h)
-            cameraDepth.set_position(camcoor_x, camcoor_y2 if cameraID == 2 else camcoor_y3, camcoor_z)
+            cameraDepth.set_position(camcoor_x, camcoor_y, camcoor_z)
             settings.add_sensor(cameraDepth)
 
-            camcoor_y3 = camcoor_y + cambaseline
-
         for episode, startPoint in enumerate(startPoints):
-            settings.set(WeatherId = random.choice(weathers))
+            settings.set(WeatherId=random.choice(weathers))
             # Start a new episode.
             scene = client.load_settings(settings)
             print('Starting new episode at %r...' % scene.map_name)
