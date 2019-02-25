@@ -90,6 +90,7 @@ def run_carla_client(args):
             ticLeft = time.time()
             ticTimeOut = ticLeft
             # Iterate every frame in the episode.
+            iGlobalFrame = 0
             iframe = 0
             while True:
 
@@ -99,13 +100,16 @@ def run_carla_client(args):
                 # Print some of the measurements.
                 print_measurements(measurements)
 
+
                 if measurements.player_measurements.forward_speed * 3.6 > 15:
-                    # Save the images to disk.
-                    for name, measurement in sensor_data.items():
-                        filename = args.out_filename_format.format(episode, name, iframe)
-                        measurement.save_to_disk(filename, lambda depth: camfu * cambaseline / depth, 'pfm')
-                    iframe += 1
-                    ticTimeOut = time.time()
+                    iGlobalFrame += 1
+                    if iGlobalFrame % args.period == 0:
+                        # Save the images to disk.
+                        for name, measurement in sensor_data.items():
+                            filename = args.out_filename_format.format(episode, name, iframe)
+                            measurement.save_to_disk(filename, lambda depth: camfu * cambaseline / depth, 'pfm')
+                        iframe += 1
+                        ticTimeOut = time.time()
 
                 control = measurements.player_measurements.autopilot_control
                 control.steer += random.uniform(-0.02, 0.02)
@@ -187,6 +191,11 @@ def main():
         default=100,
         type=int,
         help='number of frames per episode')
+    argparser.add_argument(
+        '--period',
+        default=10,
+        type=int,
+        help='number of frames between every saving event')
 
     args = argparser.parse_args()
 
