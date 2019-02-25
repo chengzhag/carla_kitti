@@ -40,13 +40,11 @@ def run_carla_client(args):
 
         # Choose one player start at random.
         number_of_player_starts = 152
-        if args.num_starts != 0:
-            number_of_episodes = min(number_of_player_starts, args.num_starts)
 
-        print('%d episodes will be generated...' % number_of_episodes)
+        print('%d - %d episodes will be generated...' % (args.i_start, args.i_end))
 
-        startPoints = list(range(0, number_of_player_starts))
-        startPoints = random.sample(startPoints, number_of_episodes)
+        startPoints = list(range(args.i_start, args.i_end))
+        # startPoints = random.sample(startPoints, number_of_episodes)
 
         # Create a CarlaSettings object. This object is a wrapper around
         # the CarlaSettings.ini file. Here we set the configuration we
@@ -182,10 +180,15 @@ def main():
         type=float,
         help='scale of frames')
     argparser.add_argument(
-        '-n', '--num_starts',
+        '--i_end',
         default=0,
         type=int,
-        help='number of start points (episode)')
+        help='start index of start points (episode)')
+    argparser.add_argument(
+        '--i_start',
+        default=0,
+        type=int,
+        help='end index of start points (episode)')
     argparser.add_argument(
         '-f', '--frames_per_episode',
         default=100,
