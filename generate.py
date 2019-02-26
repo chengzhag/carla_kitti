@@ -106,7 +106,7 @@ def run_carla_client(args):
                         if iGlobalFrame % args.period == 0:
                             # Save the images to disk.
                             for name, measurement in sensor_data.items():
-                                filename = args.out_filename_format.format(episode, name, iframe)
+                                filename = args.out_filename_format.format(startPoint, name, iframe)
                                 measurement.save_to_disk(filename, lambda depth: camfu * cambaseline / depth, 'pfm')
                             iframe += 1
                             ticTimeOut = time.time()
